@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <exception>
 
 using namespace std;
 
@@ -80,7 +81,8 @@ ostream& operator<<(ostream& os, const token& t) {
         k = ")";
         break;
    }
-    os << "KIND : " << k << " VALUE : " << t.value ;
+    if (t.kind !=token_type::NUMBER) os << "KIND : " << k;
+    if (t.kind == token_type::NUMBER) os << "Value : " << t.value;
     return os;
 }
 
@@ -195,15 +197,47 @@ public:
     }
 
     int expr() {
-        int val = term();
+        int left = term();
+        token t;
+        getToken(t);
+        while (true) {
+            switch (t.kind) {
+            case token_type::PLUS:
+                left += term();
+                getToken(t);
+                break;
+            case token_type::MINUS:
+                left -= term();
+                getToken(t);
+                break;
+            default:
+                backToken();
+                return left;
 
-        return val;
+
+            }
+        }
     }
 
     int term() {
-        int val = prim();
-
-
+        int left = prim();
+        token t;
+        getToken(t);
+        while (true) {
+            switch (t.kind) {
+            case token_type::MULTIPLY:
+                left *= prim();
+                getToken(t);
+                break;
+            case token_type::DIVIDE:
+                left /= prim();
+                getToken(t);
+                break;
+            default:
+                backToken();
+                return left;
+            }
+        }
     }
 
     int prim() {
@@ -211,15 +245,19 @@ public:
         getToken(t);
         switch (t.kind) {
         case token_type::NUMBER :
+
         {int val = t.value;
+#ifdef DEBUG
+
+        cout << "NUMBER " << val << "\n";
+#endif
+
         return val; }
         case token_type::LEFT_PARENTHESES:
-         {int val = expr();
+         {int d = expr();
          getToken(t);
-         if (t.kind != token_type::RIGHT_PARENTHESES) {
-
-         }
-         return val;
+         if (t.kind != token_type::RIGHT_PARENTHESES) std::invalid_argument("A right parentheses was expected!");
+         return d;
          }
         }
     }
@@ -241,7 +279,7 @@ int main()
     calc.run();
     cout <<"\n"+ expression + "\n";
     calc.print();
-  
+    cout <<calc.expr();
   //  calc.debug();
 }
 
