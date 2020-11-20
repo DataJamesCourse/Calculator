@@ -86,16 +86,18 @@ ostream& operator<<(ostream& os, const token& t) {
 
 class tokenizer {
 private:
+    int parentheses;
     vector<token> tokens;
     istringstream is;
     vector<token>::iterator it;
     tokenizer()
-        :tokens(), is()
+        :tokens(), is(),parentheses(0)
     {
     }
 public:
     tokenizer(string v)
-        :tokens(), is(v + ";") {
+        :tokens(), is(v + ";"),parentheses(0) 
+    {
         //Why  the initializer adds a semicolon?
         //We need a one more character to parse an expression 
         //because the last character of the expression is discarded from while (isget()){}
@@ -160,6 +162,7 @@ public:
             }
 
         }
+        Iterator_reset();
     }
     void print() {
         for (const token& element : tokens)
@@ -191,45 +194,35 @@ public:
         it--;
     }
 
-    void expression() {
-        token t = getToken();
-        int value = 0;
-        if (t.kind == token_type::PLUS) {
-           expression();
-            cout << "+";
-        }
-        else {
-            backToken();
-            term();
-        }
+    int expr() {
+        int val = term();
+
+        return val;
     }
 
-    void term() {
-        token t = getToken();
-        if (t.kind == token_type::MULTIPLY) {
-            term();
-            cout << "*";
-        }
-        else {
-            backToken();
-            factor();
-        }
+    int term() {
+        int val = prim();
+
 
     }
 
-    void factor() {
-        token t = getToken();
-        if (t.kind == token_type::LEFT_PARENTHESES) {
-            expression();
-            t = getToken();
-            if (t.kind == token_type::RIGHT_PARENTHESES) {
-                return;
-            }
+    int prim() {
+        token t;
+        getToken(t);
+        switch (t.kind) {
+        case token_type::NUMBER :
+        {int val = t.value;
+        return val; }
+        case token_type::LEFT_PARENTHESES:
+         {int val = expr();
+         getToken(t);
+         if (t.kind != token_type::RIGHT_PARENTHESES) {
+
+         }
+         return val;
+         }
         }
-        cout << t.value <<" ";
-
     }
-
     void debug() {
         Iterator_reset();
         token t;
@@ -243,13 +236,13 @@ public:
 
 int main()
 {
-    string expression = "23+ 23* 32+2*(234+12)";
+    string expression = "(54*32-12)+32";
     tokenizer calc(expression);
     calc.run();
     cout <<"\n"+ expression + "\n";
-    //calc.print();
-    //calc.expression();
-    calc.debug();
+    calc.print();
+  
+  //  calc.debug();
 }
 
 // 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
