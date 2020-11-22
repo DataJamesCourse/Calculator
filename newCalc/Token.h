@@ -15,7 +15,8 @@ namespace NewCalc {
 		Left_parentheses,
 		Right_parentheses,
 		Variable,
-		None
+		None,
+		End
 	};
 
 	class Token
